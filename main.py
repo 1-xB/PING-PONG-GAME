@@ -2,6 +2,7 @@ import random
 
 import pygame
 from sys import exit
+start_time = 1
 
 paddle1_moveup = False
 paddle1_movedown = False
@@ -13,7 +14,7 @@ score2 = 0
 class Paddle1:
     def __init__(self):
         self.paddle = pygame.image.load("img/paddle.png")
-        self.rect = self.paddle.get_rect(center=(30, 480))
+        self.rect = self.paddle.get_rect(center=(10, 480))
 
     def draw(self, screen):
         screen.blit(self.paddle, self.rect)
@@ -40,7 +41,7 @@ class Paddle1:
 class Paddle2:
     def __init__(self):
         self.paddle = pygame.image.load("img/paddle.png")
-        self.rect = self.paddle.get_rect(center=(1250, 480))
+        self.rect = self.paddle.get_rect(center=(1270, 480))
 
     def draw(self, screen):
         screen.blit(self.paddle, self.rect)
@@ -64,11 +65,18 @@ class Paddle2:
         return paddle2_movedown
 
 def update():
+    global score1, score2
     screen.fill('black')
     pygame.draw.line(screen, '#969696', (640, 0), (640, 960), 5)  # (x1, y1) -> (x2, y2), grubość linii
     screen.blit(paddle1.paddle, paddle1.rect)
     screen.blit(paddle2.paddle, paddle2.rect)
     screen.blit(ball.ball, ball.rect)
+    score_p1 = font.render(f'{score1}', True, (255, 255, 255))
+    score_p1_rect = score_p1.get_rect(center=(600, 480))
+    score_p2 = font.render(f'{score2}', True, (255, 255, 255))
+    score_p2_rect = score_p2.get_rect(center=(680, 480))
+    screen.blit(score_p1, score_p1_rect)
+    screen.blit(score_p2, score_p2_rect)
     pygame.display.update()
 class Ball:
     def __init__(self):
@@ -78,50 +86,36 @@ class Ball:
         self.speed_y = 7
 
     def draw(self, screen):
-        global score1, score2
+        global score1, score2, start_time, current_time
+        current_time = pygame.time.get_ticks()
         self.rect.y += self.speed_y
         self.rect.x += self.speed_x
-        if self.rect.top <= 0 or self.rect.bottom >= 940:
+        if self.rect.top <= 0 or self.rect.bottom >= 960 and not self.rect.colliderect(paddle1) and not self.rect.colliderect(paddle2):
             self.speed_y *= -1
-        if self.rect.bottom <= 0:
+        if self.rect.bottom <= 0 and not self.rect.colliderect(paddle1) and not self.rect.colliderect(paddle2):
             self.speed_x *= -1
         if self.rect.colliderect(paddle1):
             self.speed_x *= -1
         if self.rect.colliderect(paddle2):
             self.speed_x *= -1
-        if self.rect.x <= 10:
+
+        if self.rect.x <= 0:
             score1 += 1
             self.rect.y = 480
             self.rect.x = 625
             self.speed_x *= -1
             paddle1.rect.y = 480
             paddle2.rect.y = 480
-
             update()
-            sco1 = font.render(f'{score1}', True, (255, 255, 255))
-            sco1rect = sco1.get_rect(center=(600, 480))
-            sco2 = font.render(f'{score2}', True, (255, 255, 255))
-            sco2_rect = sco2.get_rect(center=(680, 480))
-            screen.blit(sco1, sco1rect)
-            screen.blit(sco2, sco2_rect)
-            pygame.display.update()
-            pygame.time.wait(1000)
-        if self.rect.x >= 1270:
+
+        if self.rect.x >= 1280:
             score2 += 1
             self.rect.y = 480
             self.rect.x = 625
             paddle1.rect.y = 480
             paddle2.rect.y = 480
-
             update()
-            score_p1 = font.render(f'{score1}', True, (255, 255, 255))
-            score_p1_rect = score_p1.get_rect(center=(600, 480))
-            score_p2 = font.render(f'{score2}', True, (255, 255, 255))
-            score_p2_rect = score_p2.get_rect(center=(680, 480))
-            screen.blit(score_p1, score_p1_rect)
-            screen.blit(score_p2, score_p2_rect)
-            pygame.display.update()
-
+            start_time = pygame.time.get_ticks()
             los = random.randint(0,1)
             if los:
                 self.speed_x *= -1
@@ -131,7 +125,6 @@ class Ball:
 
             screen.blit(self.ball, self.rect)
 
-            pygame.time.wait(1000)
 
         screen.blit(self.ball, self.rect)
 
@@ -176,17 +169,14 @@ while True:
     if paddle2_movedown:
         if paddle2.rect.top <= 800:
             paddle2.rect.top += 6
-    score_p1 = font.render(f'{score1}', True, (255, 255, 255))
-    score_p1_rect = score_p1.get_rect(center=(600, 480))
-    score_p2 = font.render(f'{score2}', True, (255, 255, 255))
-    score_p2_rect = score_p2.get_rect(center=(680, 480))
+
     screen.fill('black')
     pygame.draw.line(screen, '#969696', (640, 0), (640, 960), 5)  # (x1, y1) -> (x2, y2), grubość linii
     paddle1.draw(screen)
     paddle2.draw(screen)
+    update()
+    if start_time:
+        ball.draw(screen)
 
-    ball.draw(screen)
-    screen.blit(score_p1, score_p1_rect)
-    screen.blit(score_p2, score_p2_rect)
     pygame.display.update()
     clock.tick(75)
